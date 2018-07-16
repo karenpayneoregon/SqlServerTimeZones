@@ -17,6 +17,7 @@ namespace TimeZoneUnitTests
         [TestTraits(Trait.TimeZones)]
         public void ValidateTimeZoneList()
         {
+            Tester();
             // arrange
             var actualTimeZoneCount = TimeZoneCount();
             var ops = new DataOperations();
