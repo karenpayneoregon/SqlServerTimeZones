@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BaseLibrary.Classes;
 
 namespace BaseLibrary
 {
@@ -16,6 +17,76 @@ namespace BaseLibrary
         public DataOperations()
         {
             DefaultCatalog = "ForumExamples";
+        }
+
+        public List<WorkingWithDates> ReadAllRecords()
+        {
+            var recordList = new List<WorkingWithDates>();
+
+            using (var cn = new SqlConnection() {ConnectionString = ConnectionString})
+            {
+                using (var cmd = new SqlCommand() {Connection = cn})
+                {
+                    cmd.CommandText = "SELECT id, SomeDateWithOffSet, SomeDate, FirstName, LastName, DATENAME(tz, SomeDateWithOffSet) AS Zone " + 
+                                      "FROM dbo.WorkingWithDates AS wwd";
+
+                    cn.Open();
+                    var reader = cmd.ExecuteReader(CommandBehavior.CloseConnection);
+                    while (reader.Read())
+                    {
+                        recordList.Add(new WorkingWithDates()
+                        {
+                            Id = reader.GetInt32(0),
+                            SomeDateWithOffSet = reader.GetDateTimeOffset(1),
+                            SomeDate = reader.GetDateTime(2),
+                            FirstName = reader.GetString(3),
+                            LastName = reader.GetString(4),
+                            Zone = reader.GetString(5)
+                        });
+                    }
+                }
+            }
+
+            return recordList;
+        }
+
+        public List<WorkingWithDates> GetRecordByTimeZoneUsingTimeZoneTable(string pTimeZone)
+        {
+            var recordList = new List<WorkingWithDates>();
+
+            using (var cn = new SqlConnection() { ConnectionString = ConnectionString })
+            {
+                using (var cmd = new SqlCommand() { Connection = cn })
+                {
+                    cmd.CommandText = "SELECT  w.id, SomeDateWithOffSet, SomeDate, DATENAME(tz, SomeDateWithOffSet) AS Zone, " +
+                                        "(SELECT REPLACE(SUBSTRING(( SELECT  ',' + Place AS 'data()' FROM TimeZones AS t " + 
+                                        "WHERE Timezone = DATENAME(tz, SomeDateWithOffSet) FOR XML PATH('')), 2, 6000), '&amp;', '&')) AS Locations, " + 
+                                        "FirstName, LastName " + 
+                                        "FROM dbo.WorkingWithDates AS w " + 
+                                        "WHERE DATENAME(tz, SomeDateWithOffSet) = @TimeZone";
+
+                    cmd.Parameters.AddWithValue("@TimeZone", pTimeZone);
+
+                    cn.Open();
+                    var reader = cmd.ExecuteReader(CommandBehavior.CloseConnection);
+                    while (reader.Read())
+                    {
+                        recordList.Add(new WorkingWithDates()
+                        {
+                            Id = reader.GetInt32(0),
+                            SomeDateWithOffSet = reader.GetDateTimeOffset(1),
+                            SomeDate = reader.GetDateTime(2),
+                            Zone = reader.GetString(3),
+                            Locations = reader.GetString(4),
+                            FirstName = reader.GetString(5),
+                            LastName = reader.GetString(6)
+                            
+                        });
+                    }
+                }
+            }
+
+            return recordList;
         }
 
         public void GetTimeZones()

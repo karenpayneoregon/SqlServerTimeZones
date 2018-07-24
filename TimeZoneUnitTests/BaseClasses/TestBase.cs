@@ -21,6 +21,26 @@ namespace TimeZoneUnitTests.BaseClasses
             DefaultCatalog = "ForumExamples";
         }
 
+        protected (DateTimeOffset CurrentLocalDateTimeOffset, string CurrentLocalOffset, DateTimeOffset AnotherTimeZone, DateTime CurrentLocalDateTime) Example1()
+        {
+            using (var cn = new SqlConnection() {ConnectionString = ConnectionString})
+            {
+                using (var cmd = new SqlCommand() {Connection = cn})
+                {
+
+                    cmd.CommandText = "SELECT SYSDATETIMEOFFSET() AS CurrentLocalDateTimeOffset, " + 
+                                        "DATENAME(tzoffset, SYSDATETIMEOFFSET()) AS CurrentLocalOffset, " +
+                                        "SWITCHOFFSET(CONVERT(DATETIMEOFFSET, GETDATE()),'-04:00') AS AnotherTimeZone," + 
+                                        "GETDATE() AS CurrentLocalDateTime;";
+
+                    cn.Open();
+                    var reader = cmd.ExecuteReader();
+                    reader.Read();
+                    return (reader.GetDateTimeOffset(0), reader.GetString(1), reader.GetDateTimeOffset(2), reader.GetDateTime(3));
+                }
+            }
+        }
+
         private static void ShowPossibleTimeZones(DateTimeOffset offsetTime)
         {
             TimeSpan offset = offsetTime.Offset;
@@ -28,10 +48,23 @@ namespace TimeZoneUnitTests.BaseClasses
             ReadOnlyCollection<TimeZoneInfo> timeZones = TimeZoneInfo.GetSystemTimeZones();
             foreach (TimeZoneInfo timeZone in timeZones)
             {
+                string tz = timeZone.BaseUtcOffset.ToString();
+                Console.WriteLine($"{tz}  {timeZone.DaylightName}");
                 if (timeZone.GetUtcOffset(offsetTime.DateTime).Equals(offset))
                 {
-                    Console.WriteLine("   {0}", timeZone.DisplayName);
+                    //Console.WriteLine("   {0}", timeZone.DisplayName);
                 }
+            }
+        }
+        /// <summary>
+        /// Show all TimeZones from
+        /// </summary>
+        protected void GetAllTimeZonesFromTheFramework()
+        {
+            var timeZones = TimeZoneInfo.GetSystemTimeZones();
+            foreach (TimeZoneInfo timeZone in timeZones)
+            {
+                Console.WriteLine($"{timeZone.StandardName}, {timeZone.BaseUtcOffset}");
             }
         }
 
@@ -50,10 +83,10 @@ namespace TimeZoneUnitTests.BaseClasses
 
             Console.WriteLine($"{os.Hours.ToString("D2")}:{os.Minutes.ToString("D2")}");
 
-            //DateTime dstDate = new DateTime(2018, 6, 10, 0, 0, 0);
+            DateTime dstDate = new DateTime(2018, 6, 10, 0, 0, 0);
 
-            //DateTimeOffset thisTime = new DateTimeOffset(dstDate, new TimeSpan(-5, 0, 0));
-            //ShowPossibleTimeZones(thisTime);
+            DateTimeOffset thisTime = new DateTimeOffset(dstDate, new TimeSpan(-5, 0, 0));
+            ShowPossibleTimeZones(thisTime);
 
 
         }

@@ -6,7 +6,9 @@ namespace TimeZoneUnitTests.Traits
 {
     public enum Trait
     {
-        TimeZones
+        TimeZones,
+        DateTimeOptionsFromCode,
+        DateTimeOptionsFromSqlServer
     }
 
     public class TestTraitsAttribute : TestCategoryBaseAttribute

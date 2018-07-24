@@ -24,17 +24,20 @@ SELECT DISTINCT Timezone FROM dbo.Timezones; SELECT @@ROWCOUNT
 
 -------------------
 SELECT  w.id ,
-        SomeDate ,
-        DATENAME(tz, SomeDate) AS Zone ,
+        SomeDateWithOffSet , 
+		SomeDate,
+        DATENAME(tz, SomeDateWithOffSet) AS Zone ,
         ( SELECT  REPLACE(SUBSTRING(( SELECT  ',' + Place AS 'data()'
                                       FROM    TimeZones AS t
-                                      WHERE   Timezone = DATENAME(tz, SomeDate)
+                                      WHERE   Timezone = DATENAME(tz, SomeDateWithOffSet)
                                       FOR XML PATH('')
                                     ), 2, 6000), '&amp;', '&')
         ) AS Locations ,
         FirstName ,
         LastName
-FROM    dbo.WorkingWithDates AS w ORDER BY Zone; 
+FROM    dbo.WorkingWithDates AS w WHERE  DATENAME(tz, SomeDateWithOffSet) = '-07:00'
+
+
 
 SELECT id, SomeDate AS Zone FROM dbo.WorkingWithDates AS wwd ;
 SELECT id, DATENAME(tz, SomeDate) AS Zone FROM dbo.WorkingWithDates AS wwd ;
